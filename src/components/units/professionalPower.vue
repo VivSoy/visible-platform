@@ -2,11 +2,21 @@
   <div class="powerContainer">
     <title-part :value="title"></title-part>
 
+    <div class="pieMsg">
+      <div>
+        <span>178</span>
+        人
+      </div>
+      <div>
+        专业队伍
+      </div>
+    </div>
+
     <!-- 饼状图 -->
     <div class="pieContainer" ref="pieChart"></div>
 
     <div class="classify">
-      <div class="classItem" @click="changebg(index)" :class="item.status?'changebg':''" v-for="(item,index) in tag" :key="index">
+      <div class="classItem" @click="clickOption(index)" :class="item.status?'changebg':''" v-for="(item,index) in tag" :key="index">
         <div class="itemLeft">
            <div :class="item.class" class="circle"></div>
           <div class="pieWord">{{item.name}}</div>
@@ -14,6 +24,7 @@
         <div class="piePerson">{{item.num}}</div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -27,7 +38,7 @@ export default {
       tag: [
         {
           class: 'shequ',
-          name: '社区警察',
+          name: '社区民警',
           num: '26人',
           status: true
         },
@@ -61,61 +72,103 @@ export default {
           num: '48人',
           status: false
         }
-      ]
+      ],
       // 图表配置
-      // option: {
-      //   tooltip: {
-      //     trigger: 'item'
-      //   },
-      //   legend: {
-      //     top: '5%',
-      //     left: 'center'
-      //   },
-      //   series: [
-      //     {
-      //       name: 'Access From',
-      //       type: 'pie',
-      //       radius: ['40%', '70%'],
-      //       avoidLabelOverlap: false,
-      //       label: {
-      //         show: false,
-      //         position: 'center'
-      //       },
-      //       emphasis: {
-      //         label: {
-      //           show: true,
-      //           fontSize: '40',
-      //           fontWeight: 'bold'
-      //         }
-      //       },
-      //       labelLine: {
-      //         show: false
-      //       },
-      //       data: [
-      //         { value: 26, name: '社区' },
-      //         { value: 23, name: 'Direct' },
-      //         { value: 50, name: 'Email' },
-      //         { value: 48, name: 'Union Ads' },
-      //         { value: 44, name: 'Video Ads' },
-      //         { value: 48, name: '民兵' }
-      //       ]
-      //     }
-      //   ]
-      // },
+      option: {
+        tooltip: {
+          trigger: 'item'
+
+        },
+        legend: { // 图表的位置
+          top: '15%',
+          left: 'center',
+          show: false, // 不显示图例
+          position: 'right'
+        },
+        color: [ // 设置颜色
+          '#57F8B1', 'rgba(255,255,255,0)', '#4BCDE9', 'rgba(255,255,255,0)', '#129EF0', 'rgba(255,255,255,0)', '#EEBF42', 'rgba(255,255,255,0)', '#F48736', 'rgba(255,255,255,0)', '#4549FF', 'rgba(255,255,255,0)'
+        ],
+        series: [
+          {
+            name: 'power',
+            type: 'pie',
+            radius: ['60%', '70%'], // 内外半径
+            avoidLabelOverlap: false, // 固定标签在圆环中部
+            itemStyle: {
+              // borderRadius: 1,
+              // borderColor: '#051c44',
+              // borderWidth: 4
+            },
+            label: {
+              show: false,
+              position: 'center' // 标签显示位置
+            },
+            labelLine: {
+              show: false
+            },
+            data: [
+              { value: 26, name: '社区民警' },
+              { value: 1, name: '' },
+              { value: 23, name: '综合执法力量' },
+              { value: 1, name: '' },
+              { value: 50, name: '国土执法力量' },
+              { value: 1, name: '' },
+              { value: 48, name: '司法所力量' },
+              { value: 1, name: '' },
+              { value: 44, name: '市场监管力量' },
+              { value: 1, name: '' },
+              { value: 48, name: '民兵' },
+              { value: 1, name: '' }
+            ]
+          }
+        ]
+      },
+      // 保存echarts实例
+      chart: ''
     }
   },
   mounted () {
-    // // 初始化echart实例
-    // const chart = this.$echarts.init(this.$refs.pieChart)
-    // // 指定图标配置
-    // chart.setOption(this.option)
+    // 初始化echart实例
+    this.chart = this.$echarts.init(this.$refs.pieChart)
+    // 指定图标配置
+    this.chart.setOption(this.option)
+    this.chart.dispatchAction({
+      type: 'highlight',
+      seriesName: 'power',
+      name: '社区民警'
+    })
   },
   methods: {
-    changebg (index) {
+    clickOption (index) {
       this.tag.forEach(item => {
         item.status = false
       })
       this.tag[index].status = true
+
+      // 先取消其他高亮
+      this.chart.dispatchAction({
+        type: 'downplay',
+        seriesName: 'power'
+      })
+      // 高亮
+      this.chart.dispatchAction({
+        type: 'highlight',
+        seriesName: 'power',
+        name: this.tag[index].name
+      })
+      // 显示信息
+      this.chart.dispatchAction({
+        type: 'showTip',
+        seriesIndex: 0,
+        name: this.tag[index].name
+      })
+
+      // 定时关闭信息
+      setTimeout(() => {
+        this.chart.dispatchAction({
+          type: 'hideTip'
+        })
+      }, 1000)
     }
   }
 
@@ -130,7 +183,7 @@ export default {
   .pieContainer{
     height: 216px;
     width: 100%;
-    background-color: red;
+    // background-color: red;
   }
 
   // 分类
@@ -205,5 +258,34 @@ export default {
 
   }
 
+  .pieMsg{
+    position: absolute;
+    left: 136px;
+    top: 80px;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 50%;
+    border: 1px solid #253C56;
+    font-size: 14px;
+    font-family: Source Han Sans CN;
+    font-weight: 400;
+    color: rgba(242, 252, 253, 0.84);
+
+    div span{
+      font-size: 24px;
+      font-family: Akzidenz-Grotesk BQ Condensed;
+      font-weight: 400;
+      color: #F2FCFD;
+      line-height: 47px;
+
+      background: linear-gradient(0deg, #FBB231 0%, #FFFFFF 99.5361328125%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
 }
 </style>

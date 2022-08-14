@@ -2,6 +2,15 @@
   margin: 0;
   padding: 0;
 }
+
+
+body{
+  font-size: 14px;
+  font-family: Source Han Sans CN;
+  font-weight: 400;
+  color: #F2FCFD;
+}
+
 ul li{
   list-style: none;
 }
@@ -14,3 +23,5 @@ ul li{
   fill: currentColor;
   overflow: hidden;
 }
+
+
